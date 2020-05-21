@@ -549,7 +549,11 @@ func (c *baseClient) getUser(ctx context.Context, query *userQuery) (*UserRecord
 	var parsed struct {
 		Users []*userQueryResponse `json:"users"`
 	}
-	_, err := c.post(ctx, "/accounts:lookup", query.build(), &parsed)
+	payload := query.build()
+	if c.tenantID != "" {
+		payload["tenantId"] = c.tenantID
+	}
+	_, err := c.post(ctx, "/accounts:lookup",payload , &parsed)
 	if err != nil {
 		return nil, err
 	}
@@ -710,6 +714,9 @@ func (c *baseClient) updateUser(ctx context.Context, uid string, user *UserToUpd
 		return err
 	}
 	request["localId"] = uid
+	if c.tenantID != "" {
+		request["tenantId"] = c.tenantID
+	}
 
 	_, err = c.post(ctx, "/accounts:update", request, nil)
 	return err
@@ -723,6 +730,9 @@ func (c *baseClient) DeleteUser(ctx context.Context, uid string) error {
 
 	payload := map[string]interface{}{
 		"localId": uid,
+	}
+	if c.tenantID != "" {
+		payload["tenantId"] = c.tenantID
 	}
 	_, err := c.post(ctx, "/accounts:delete", payload, nil)
 	return err
